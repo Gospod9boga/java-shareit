@@ -9,5 +9,4 @@ public class User {
     private Long Id;
     private String email;
 
-
 }

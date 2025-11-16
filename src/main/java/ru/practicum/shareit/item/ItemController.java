@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -57,7 +56,7 @@ public class ItemController {
     public ItemDto updateItem(
             @PathVariable Long itemId,
             @RequestHeader("X-Sharer-User-Id") Long ownerId,
-            @Validated(ItemDto.Update.class) @RequestBody ItemDto itemDto) {  // ← Используем группу Update!
+            @Validated(ItemDto.Update.class) @RequestBody ItemDto itemDto) {
 
         log.info("PATCH update for itemId: {}, ownerId: {}, updates: {}", itemId, ownerId, itemDto);
 

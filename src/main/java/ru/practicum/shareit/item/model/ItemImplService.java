@@ -84,7 +84,7 @@ public class ItemImplService implements ItemService {
         }
 
         return items.values().stream()
-                .filter(item -> Boolean.TRUE.equals(item.getAvailable())) // ← ИСПРАВЬ ЗДЕСЬ!
+                .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
                 .filter(item ->
                         item.getName().toLowerCase().contains(text.toLowerCase()) ||
                                 item.getDescription().toLowerCase().contains(text.toLowerCase())

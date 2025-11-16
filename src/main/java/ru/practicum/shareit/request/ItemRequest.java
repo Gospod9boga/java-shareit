@@ -13,7 +13,7 @@ import java.util.List;
 public class ItemRequest {
     private Long id;
     private String description;
-    private  Long requesterId;
+    private Long requesterId;
     private LocalDateTime created;
     private List<Long> items;
 }

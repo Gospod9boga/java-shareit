@@ -21,6 +21,9 @@ public class ItemDto {
     private Long requestId;
 
 
-    public interface Create {}
-    public interface Update {}
+    public interface Create {
+    }
+
+    public interface Update {
+    }
 }
