@@ -6,7 +6,7 @@ import lombok.*;
 
 public class User {
     private String name;
-    private Long Id;
+    private Long id;
     private String email;
 
 }

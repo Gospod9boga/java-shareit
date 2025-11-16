@@ -12,7 +12,7 @@ public class ItemRequestMapper {
         return itemRequestDto;
     }
 
-    public static ItemRequest toEntity(ItemRequestDto itemRequestDto){
+    public static ItemRequest toEntity(ItemRequestDto itemRequestDto) {
         ItemRequest itemRequest = new ItemRequest();
         itemRequest.setDescription(itemRequestDto.getDescription());
         return itemRequest;
