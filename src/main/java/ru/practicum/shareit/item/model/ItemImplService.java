@@ -2,104 +2,97 @@ package ru.practicum.shareit.item.model;
 
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.Exception.AccessDeniedException;
-import ru.practicum.shareit.Exception.EntityNotFoundException;
 import ru.practicum.shareit.Exception.ValidationException;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.mapper.ItemMapper;
 import ru.practicum.shareit.user.UserService;
+import ru.practicum.shareit.user.dto.UserDto;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @Service
 public class ItemImplService implements ItemService {
     private final UserService userService;
-    private final Map<Long, Item> items = new HashMap<>();
-    private Long currentId = 0L;
+    private final ItemStorage itemStorage;
 
-    public ItemImplService(UserService userService) {
+    public ItemImplService(UserService userService, ItemStorage itemStorage) {
         this.userService = userService;
+        this.itemStorage = itemStorage;
     }
 
     @Override
-    public Item createItem(Item item, Long ownerId) {
-        User owner = userService.getUserById(ownerId);
-        if (owner == null) {
-            throw new EntityNotFoundException("User not found");
-        }
-        item.setId(currentId);
+    public ItemDto createItem(ItemDto itemDto, Long ownerId) {
+        UserDto owner = userService.getUserById(ownerId);
+
+        Item item = ItemMapper.toEntity(itemDto);
         item.setOwnerId(ownerId);
-        items.put(currentId, item);
-        currentId++;
-        return item;
+        Item savedItem = itemStorage.save(item);
+        return ItemMapper.toDto(savedItem);
     }
 
     @Override
-    public Item updateItem(Long itemId, Item item, Long ownerId) {
-        Item existingItem = items.get(itemId);
-        if (existingItem == null) {
-            throw new ValidationException("Item not found");
-        }
+    public ItemDto updateItem(Long itemId, ItemDto itemDto, Long ownerId) {
+        Item existingItem = itemStorage.findById(itemId)
+                .orElseThrow(() -> new ValidationException("Item not found"));
 
         if (!existingItem.getOwnerId().equals(ownerId)) {
             throw new AccessDeniedException("Only owner can update item");
         }
 
-        // Эти проверки уже корректны для PATCH
-        if (item.getName() != null) {
-            existingItem.setName(item.getName());
+        if (itemDto.getName() != null) {
+            existingItem.setName(itemDto.getName());
         }
-        if (item.getDescription() != null) {
-            existingItem.setDescription(item.getDescription());
+        if (itemDto.getDescription() != null) {
+            existingItem.setDescription(itemDto.getDescription());
         }
-        if (item.getAvailable() != null) {
-            existingItem.setAvailable(item.getAvailable());
+        if (itemDto.getAvailable() != null) {
+            existingItem.setAvailable(itemDto.getAvailable());
         }
 
-        return existingItem;
+        Item updatedItem = itemStorage.save(existingItem);
+        return ItemMapper.toDto(updatedItem);
     }
 
     @Override
-    public Item getItemById(Long itemId) {
+    public ItemDto getItemById(Long itemId) {
         if (itemId == null) {
             throw new ValidationException("itemId not found");
         }
-        Item item = items.get(itemId);
-        return item;
+        Item item = itemStorage.findById(itemId)
+                .orElseThrow(() -> new ValidationException("Item not found"));
+        return ItemMapper.toDto(item);
     }
 
     @Override
-    public List<Item> getUserItems(Long ownerId) {
-
-        return items.values().stream()
-                .filter(item -> item.getOwnerId().equals(ownerId))
+    public List<ItemDto> getUserItems(Long ownerId) {
+        List<Item> userItems = itemStorage.findByOwnerId(ownerId);
+        return userItems.stream()
+                .map(ItemMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Item> searchItems(String text) {
+    public List<ItemDto> searchItems(String text) {
         if (text == null || text.isBlank()) {
             return List.of();
         }
-
-        return items.values().stream()
-                .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
-                .filter(item ->
-                        item.getName().toLowerCase().contains(text.toLowerCase()) ||
-                                item.getDescription().toLowerCase().contains(text.toLowerCase())
-                ).collect(Collectors.toList());
+        List<Item> foundItems = itemStorage.findAvailableItemsWithText(text);
+        return foundItems.stream()
+                .map(ItemMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteItem(Long itemId, Long ownerId) {
-        Item item = items.get(itemId);
-        if (item == null) {
-            throw new ValidationException("itemId not found");
-        }
+        Item item = itemStorage.findById(itemId)
+                .orElseThrow(() -> new ValidationException("Item not found"));
+
         if (!item.getOwnerId().equals(ownerId)) {
             throw new AccessDeniedException("Only owner can delete item");
         }
-        items.remove(itemId);
+        itemStorage.deleteById(itemId);
     }
+
 }

@@ -6,7 +6,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 public class UserMapper {
 
-    public static UserDto toDTO(User user) {
+    public static UserDto toDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
         dto.setEmail(user.getEmail());
@@ -21,4 +21,6 @@ public class UserMapper {
         user.setEmail(userDTO.getEmail());
         return user;
     }
+
+
 }

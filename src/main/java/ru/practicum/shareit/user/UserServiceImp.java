@@ -1,80 +1,74 @@
 package ru.practicum.shareit.user;
 
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.Exception.EntityNotFoundException;
 import ru.practicum.shareit.Exception.ValidationException;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.mapper.UserMapper;
+import ru.practicum.shareit.user.storage.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
-@Data
 @Service
+@RequiredArgsConstructor
 public class UserServiceImp implements UserService {
-
-    private Map<Long, User> users = new HashMap<>();
-    private Long currentId = 0L;
+    private final UserStorage userStorage;
 
     @Override
-    public User createUser(User user) {
-        boolean emailExists = users.values().stream()
-                .anyMatch(existingUser -> existingUser.getEmail().equals(user.getEmail()));
-        if (emailExists) {
-            throw new ValidationException("Email" + user.getEmail() + "already busy");
+    public UserDto createUser(UserDto userDto) {
+        if (userStorage.existsByEmail(userDto.getEmail())) {
+            throw new ValidationException("Email " + userDto.getEmail() + " already busy");
         }
-        users.put(currentId, user);
-        user.setId(currentId);
-        currentId++;
-        return user;
+
+        User user = UserMapper.toEntity(userDto);
+        User savedUser = userStorage.save(user);
+        return UserMapper.toDto(savedUser);
     }
 
     @Override
-    public User updateUser(Long userId, User user) {
-        if (!users.containsKey(userId)) {
-            throw new ValidationException("User with id " + userId + " not found");
+    public UserDto updateUser(Long userId, UserDto userDto) {
+        User existingUser = userStorage.findById(userId)
+                .orElseThrow(() -> new ValidationException("User with id " + userId + " not found"));
+
+        if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail())) {
+            if (userStorage.existsByEmailAndIdNot(userDto.getEmail(), userId)) {
+                throw new ValidationException("Email " + userDto.getEmail() + " already busy");
+            }
         }
 
-        User existingUser = users.get(userId);
-
-
-        boolean emailTakenByOther = users.values().stream()
-                .anyMatch(existing -> existing.getEmail().equals(user.getEmail()) &&
-                        !existing.getId().equals(userId));
-        if (emailTakenByOther) {
-            throw new ValidationException("Email " + user.getEmail() + " already busy");
+        if (userDto.getName() != null) {
+            existingUser.setName(userDto.getName());
+        }
+        if (userDto.getEmail() != null) {
+            existingUser.setEmail(userDto.getEmail());
         }
 
-
-        if (user.getName() != null) {
-            existingUser.setName(user.getName());
-        }
-        if (user.getEmail() != null) {
-            existingUser.setEmail(user.getEmail());
-        }
-
-        return existingUser;
+        User updatedUser = userStorage.save(existingUser);
+        return UserMapper.toDto(updatedUser);
     }
 
     @Override
-    public User getUserById(Long userId) {
-        if (userId == null) {
-            throw new ValidationException("user with id" + userId + "not found ");
-        }
-        User user = users.get(userId);
-        return user;
+    public UserDto getUserById(Long userId) {
+               User user = userStorage.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + userId + " not found"));
+        return UserMapper.toDto(user);
     }
 
     @Override
-    public List<User> getAllUsers() {
-
-        List<User> allUsers = new ArrayList<>(users.values());
-        return allUsers;
+    public List<UserDto> getAllUsers() {
+        List<User> users = userStorage.findAll();
+        return users.stream()
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void deleteUserById(Long userId) {
-        users.remove(userId);
-
+        if (!userStorage.findById(userId).isPresent()) {
+            throw new ValidationException("User with id " + userId + " not found");
+        }
+        userStorage.deleteById(userId);
     }
 }

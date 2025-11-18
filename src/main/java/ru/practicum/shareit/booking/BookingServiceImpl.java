@@ -3,47 +3,48 @@ package ru.practicum.shareit.booking;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.Exception.AccessDeniedException;
 import ru.practicum.shareit.Exception.ValidationException;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemService;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class BookingServiceImpl implements BookingService {
-    private final Map<Long, Booking> bookings = new HashMap<>();
     private final ItemService itemService;
-    private Long currentId = 0L;
+    private final BookingStorage bookingStorage;
 
-    public BookingServiceImpl(ItemService itemService) {
+    public BookingServiceImpl(ItemService itemService, BookingStorage bookingStorage) {
         this.itemService = itemService;
+        this.bookingStorage = bookingStorage;
     }
 
     @Override
-    public Booking createBooking(Booking booking) {
-        Item item = itemService.getItemById(booking.getItemId());
-
+    public BookingDto createBooking(BookingDto bookingDto, Long bookerId) {
+        Item item = itemService.getItemById(bookingDto.getItemId());
         if (!item.getAvailable()) {
             throw new ValidationException("Item is not available");
         }
-        if (item.getOwnerId().equals(booking.getBookerId())) {
+        if (item.getOwnerId().equals(bookerId)) {
             throw new AccessDeniedException("Cannot book your own item");
         }
 
-        booking.setId(currentId);
+
+        Booking booking = BookingMapper.toEntity(bookingDto);
+        booking.setBookerId(bookerId);
         booking.setStatus(BookingStatus.WAITING);
-        bookings.put(currentId, booking);
-        currentId++;
-        return booking;
+
+        Booking savedBooking = bookingStorage.save(booking);
+        return BookingMapper.toDto(savedBooking);
     }
 
     @Override
-    public Booking approveBooking(Long bookingId, Long ownerId, boolean approved) {
-        Booking booking = bookings.get(bookingId);
-        if (booking == null) throw new ValidationException("Booking not found");
+    public BookingDto approveBooking(Long bookingId, Long ownerId, boolean approved) {
+        Booking booking = bookingStorage.findById(bookingId)
+                .orElseThrow(() -> new ValidationException("Booking not found"));
 
         Item item = itemService.getItemById(booking.getItemId());
         if (!item.getOwnerId().equals(ownerId)) {
@@ -54,13 +55,14 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        return booking;
+        Booking updatedBooking = bookingStorage.save(booking);
+        return BookingMapper.toDto(updatedBooking);
     }
 
     @Override
-    public Booking getBookingById(Long bookingId, Long userId) {
-        Booking booking = bookings.get(bookingId);
-        if (booking == null) throw new ValidationException("Booking not found");
+    public BookingDto getBookingById(Long bookingId, Long userId) {
+        Booking booking = bookingStorage.findById(bookingId)
+                .orElseThrow(() -> new ValidationException("Booking not found"));
 
         Item item = itemService.getItemById(booking.getItemId());
         boolean isBooker = booking.getBookerId().equals(userId);
@@ -69,29 +71,36 @@ public class BookingServiceImpl implements BookingService {
         if (!isBooker && !isOwner) {
             throw new AccessDeniedException("Not allowed to view");
         }
-        return booking;
+        return BookingMapper.toDto(booking);
     }
 
     @Override
-    public List<Booking> getUserBookings(Long userId, String state) {
+    public List<BookingDto> getUserBookings(Long userId, String state) {
         List<Booking> userBookings = getAllBookingsByUserId(userId);
-        return filterBookingsByState(userBookings, state);
+        List<Booking> filteredBookings = filterBookingsByState(userBookings, state);
+        return filteredBookings.stream()
+                .map(BookingMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Booking> getOwnerBookings(Long ownerId, String state) {
+    public List<BookingDto> getOwnerBookings(Long ownerId, String state) {
         List<Booking> ownerBookings = getAllBookingsByOwnerId(ownerId);
-        return filterBookingsByState(ownerBookings, state);
+        List<Booking> filteredBookings = filterBookingsByState(ownerBookings, state);
+        return filteredBookings.stream()
+                .map(BookingMapper::toDto)
+                .collect(Collectors.toList());
     }
 
+    // Остальные методы без изменений
     private List<Booking> getAllBookingsByUserId(Long userId) {
-        return bookings.values().stream()
+        return bookingStorage.findAll().stream()
                 .filter(booking -> booking.getBookerId().equals(userId))
                 .collect(Collectors.toList());
     }
 
     private List<Booking> getAllBookingsByOwnerId(Long ownerId) {
-        return bookings.values().stream()
+        return bookingStorage.findAll().stream()
                 .filter(booking -> {
                     Item item = itemService.getItemById(booking.getItemId());
                     return item.getOwnerId().equals(ownerId);
@@ -102,7 +111,7 @@ public class BookingServiceImpl implements BookingService {
     private List<Booking> filterBookingsByState(List<Booking> bookings, String state) {
         LocalDateTime now = LocalDateTime.now();
 
-        switch (state) {
+        switch (state.toUpperCase()) {
             case "ALL":
                 return bookings;
             case "CURRENT":
@@ -120,7 +129,7 @@ public class BookingServiceImpl implements BookingService {
             case "WAITING":
             case "REJECTED":
                 return bookings.stream()
-                        .filter(b -> b.getStatus().name().equals(state))
+                        .filter(b -> b.getStatus().name().equals(state.toUpperCase()))
                         .collect(Collectors.toList());
             default:
                 throw new ValidationException("Unknown state: " + state);
