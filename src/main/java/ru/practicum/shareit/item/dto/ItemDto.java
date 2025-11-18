@@ -3,9 +3,11 @@ package ru.practicum.shareit.item.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import ru.practicum.shareit.item.model.Item;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ItemDto extends Item {
 
     private Long id;

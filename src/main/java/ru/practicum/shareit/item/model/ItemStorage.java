@@ -10,13 +10,15 @@ public class ItemStorage {
     private final Map<Long, Item> items = new HashMap<>();
     private Long currentId = 0L;
 
-    public Item save(Item item){
-        if(item.getId()==null){
+    public Item save(Item item) {
+        if (item.getId() == null) {
             item.setId(++currentId);
         }
-        items.put(item.getId(),item);
-        return  item;
+        items.put(item.getId(), item);
+        return item;
     }
+
+
     public Optional<Item> findById(Long id) {
         return Optional.ofNullable(items.get(id));
     }
@@ -27,6 +29,7 @@ public class ItemStorage {
                 .filter(item -> ownerId.equals(item.getOwnerId()))
                 .collect(Collectors.toList());
     }
+
 
     public List<Item> findAvailableItemsWithText(String text) {
         String lowerText = text.toLowerCase();
