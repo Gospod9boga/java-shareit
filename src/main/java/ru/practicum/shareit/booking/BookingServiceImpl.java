@@ -5,6 +5,8 @@ import ru.practicum.shareit.Exception.AccessDeniedException;
 import ru.practicum.shareit.Exception.ValidationException;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemService;
 
@@ -16,19 +18,21 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
     private final ItemService itemService;
     private final BookingStorage bookingStorage;
+    private final ItemMapper itemMapper;
 
-    public BookingServiceImpl(ItemService itemService, BookingStorage bookingStorage) {
+    public BookingServiceImpl(ItemService itemService, BookingStorage bookingStorage, ItemMapper itemMapper) {
         this.itemService = itemService;
         this.bookingStorage = bookingStorage;
+        this.itemMapper = itemMapper;
     }
 
     @Override
     public BookingDto createBooking(BookingDto bookingDto, Long bookerId) {
-        Item item = itemService.getItemById(bookingDto.getItemId());
-        if (!item.getAvailable()) {
+        ItemDto itemDto = itemService.getItemById(bookingDto.getItemId());
+        if (!itemDto.getAvailable()) {
             throw new ValidationException("Item is not available");
         }
-        if (item.getOwnerId().equals(bookerId)) {
+        if (itemDto.getOwnerId().equals(bookerId)) {
             throw new AccessDeniedException("Cannot book your own item");
         }
 
@@ -46,8 +50,8 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingStorage.findById(bookingId)
                 .orElseThrow(() -> new ValidationException("Booking not found"));
 
-        Item item = itemService.getItemById(booking.getItemId());
-        if (!item.getOwnerId().equals(ownerId)) {
+        ItemDto itemDto = itemService.getItemById(booking.getItemId());
+        if (!itemDto.getOwnerId().equals(ownerId)) {
             throw new AccessDeniedException("Only owner can approve booking");
         }
         if (booking.getStatus() != BookingStatus.WAITING) {
@@ -64,9 +68,9 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingStorage.findById(bookingId)
                 .orElseThrow(() -> new ValidationException("Booking not found"));
 
-        Item item = itemService.getItemById(booking.getItemId());
+        ItemDto itemDto = itemService.getItemById(booking.getItemId());
         boolean isBooker = booking.getBookerId().equals(userId);
-        boolean isOwner = item.getOwnerId().equals(userId);
+        boolean isOwner = itemDto.getOwnerId().equals(userId);
 
         if (!isBooker && !isOwner) {
             throw new AccessDeniedException("Not allowed to view");
@@ -102,8 +106,8 @@ public class BookingServiceImpl implements BookingService {
     private List<Booking> getAllBookingsByOwnerId(Long ownerId) {
         return bookingStorage.findAll().stream()
                 .filter(booking -> {
-                    Item item = itemService.getItemById(booking.getItemId());
-                    return item.getOwnerId().equals(ownerId);
+                    ItemDto itemDto = itemService.getItemById(booking.getItemId());
+                    return itemDto.getOwnerId().equals(ownerId);
                 })
                 .collect(Collectors.toList());
     }

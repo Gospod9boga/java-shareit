@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.practicum.shareit.item.model.Item;
+
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -22,6 +22,10 @@ public class ItemDto  {
     private Boolean available;
 
     private Long requestId;
+
+    public Object getOwnerId() {
+        return null;
+    }
 
 
     public interface Create {
