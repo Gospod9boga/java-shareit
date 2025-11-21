@@ -8,7 +8,7 @@ import ru.practicum.shareit.item.model.Item;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class ItemDto extends Item {
+public class ItemDto  {
 
     private Long id;
 
