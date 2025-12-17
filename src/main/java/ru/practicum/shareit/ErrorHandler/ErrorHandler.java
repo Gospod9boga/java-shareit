@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.practicum.shareit.Exception.AccessDeniedException;
 import ru.practicum.shareit.Exception.EmailAlreadyExistsException;
 import ru.practicum.shareit.Exception.EntityNotFoundException;
+import ru.practicum.shareit.Exception.ValidationException;
 
 import java.util.stream.Collectors;
 
@@ -32,6 +33,12 @@ public class ErrorHandler {
                 .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(ValidationException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
         String errorMessage = e.getBindingResult().getFieldErrors().stream()
@@ -41,4 +48,12 @@ public class ErrorHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse("Validation failed: " + errorMessage));
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Internal server error: " + e.getClass().getSimpleName() + ": " + e.getMessage()));
+    }
+
 }

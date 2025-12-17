@@ -3,7 +3,6 @@ package ru.practicum.shareit.user;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.Exception.EntityNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
@@ -29,12 +28,8 @@ public class UserController {
     @GetMapping("/{id}")
     public UserDto getUserById(@PathVariable Long id) {
         log.info("Get user by id:{}", id);
-        UserDto userDto = userService.getUserById(id);
 
-        if (userDto == null) {
-            throw new EntityNotFoundException("User with id = " + id + "not found");
-        }
-        return userDto;
+        return userService.getUserById(id);
     }
 
     @PatchMapping("/{id}")
