@@ -1,43 +1,54 @@
 package ru.practicum.shareit.request;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.Exception.ValidationException;
+import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.repo.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ItemRequestImplService implements ItemRequestService {
-    private final Map<Long, ItemRequest> requests = new HashMap<>();
-    private Long currentId = 0L;
+    private final ItemRequestRepository itemRequestRepository;
+    private final UserRepository userRepository;
+
+    public ItemRequestImplService(ItemRequestRepository itemRequestRepository,
+                                  UserRepository userRepository) {
+        this.itemRequestRepository = itemRequestRepository;
+        this.userRepository = userRepository;
+    }
 
     @Override
+    @Transactional
     public ItemRequest createRequest(ItemRequest request, Long userId) {
-        request.setId(currentId);
-        request.setRequesterId(userId);
-        request.setCreated(LocalDateTime.now());
-        request.setItems(new ArrayList<>());
 
-        requests.put(currentId, request);
-        currentId++;
-        return request;
+        User requester = userRepository.findById(userId)
+                .orElseThrow(() -> new ValidationException("Пользователь не найден"));
+
+        request.setRequester(requester);
+        request.setCreated(LocalDateTime.now());
+
+        if (request.getItems() == null) {
+            request.setItems(new ArrayList<>());
+        }
+
+        return itemRequestRepository.save(request);
     }
 
     @Override
     public List<ItemRequest> getUserRequests(Long userId) {
-        return requests.values().stream()
-                .filter(request -> request.getRequesterId().equals(userId))
-                .collect(Collectors.toList());
+        return itemRequestRepository.findByRequesterIdOrderByCreatedDesc(userId);
     }
 
     @Override
     public List<ItemRequest> getAllRequests(Long userId, int from, int size) {
-        return requests.values().stream()
-                .filter(request -> !request.getRequesterId().equals(userId))
+        return itemRequestRepository.findByRequesterIdNotOrderByCreatedDesc(userId)
+                .stream()
                 .skip(from)
                 .limit(size)
                 .collect(Collectors.toList());
@@ -45,10 +56,7 @@ public class ItemRequestImplService implements ItemRequestService {
 
     @Override
     public ItemRequest getRequestById(Long requestId, Long userId) {
-        ItemRequest request = requests.get(requestId);
-        if (request == null) {
-            throw new ValidationException("Request not found");
-        }
-        return request;
+        return itemRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ValidationException("Запрос не найден"));
     }
 }
