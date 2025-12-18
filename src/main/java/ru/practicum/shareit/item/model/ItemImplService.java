@@ -1,6 +1,6 @@
 package ru.practicum.shareit.item.model;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.Exception.AccessDeniedException;
@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class ItemImplService implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -43,6 +44,7 @@ public class ItemImplService implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto createItem(ItemDto itemDto, Long ownerId) {
         if (itemDto.getAvailable() == null) {
             throw new ValidationException("Поле available обязательно");
@@ -72,6 +74,7 @@ public class ItemImplService implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto updateItem(Long itemId, ItemDto itemDto, Long ownerId) {
         Item existingItem = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ValidationException("Item not found"));
@@ -95,7 +98,7 @@ public class ItemImplService implements ItemService {
     }
 
     @Override
-    public ItemDto getItemById(Long itemId, Long userId) { // ДОБАВИТЬ userId параметр
+    public ItemDto getItemById(Long itemId, Long userId) {
         if (itemId == null) {
             throw new ValidationException("itemId not found");
         }
@@ -237,6 +240,7 @@ public class ItemImplService implements ItemService {
     }
 
     @Override
+    @Transactional
     public void deleteItem(Long itemId, Long ownerId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ValidationException("Item not found"));

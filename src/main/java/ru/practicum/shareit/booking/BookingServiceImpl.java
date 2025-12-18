@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.Exception.AccessDeniedException;
 import ru.practicum.shareit.Exception.EntityNotFoundException;
 import ru.practicum.shareit.Exception.ValidationException;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
@@ -30,26 +32,11 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
+    @Transactional
     public BookingResponseDto createBooking(BookingDto bookingDto, Long userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь с ID " + userId + " не найден"));
-
-        if (bookingDto.getItemId() == null) {
-            throw new ValidationException("ID вещи не указан");
-        }
-        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-            throw new ValidationException("Даты начала и окончания обязательны");
-        }
-        if (bookingDto.getStart().isAfter(bookingDto.getEnd())) {
-            throw new ValidationException("Дата начала должна быть раньше даты окончания");
-        }
-        if (bookingDto.getStart().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Нельзя бронировать в прошлом");
-        }
-        if (bookingDto.getStart().isEqual(bookingDto.getEnd())) {
-            throw new ValidationException("Дата начала не может совпадать с датой окончания");
-        }
 
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new EntityNotFoundException("Вещь с ID " + bookingDto.getItemId() + " не найдена"));
@@ -76,6 +63,7 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
+    @Transactional
     public BookingResponseDto approveBooking(Long bookingId, Long ownerId, boolean approved) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new EntityNotFoundException("Бронирование не найдено"));
@@ -112,9 +100,6 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingResponseDto> getUserBookings(Long userId, String state) {
-        if (userId == null) {
-            throw new ValidationException("ID пользователя не указан");
-        }
 
         userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));

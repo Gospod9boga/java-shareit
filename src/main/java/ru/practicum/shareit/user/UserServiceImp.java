@@ -2,6 +2,7 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.Exception.EmailAlreadyExistsException;
 import ru.practicum.shareit.Exception.EntityNotFoundException;
 import ru.practicum.shareit.Exception.ValidationException;
@@ -14,10 +15,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public UserDto createUser(UserDto userDto) {
         User user = UserMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
@@ -25,6 +28,7 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional
     public UserDto updateUser(Long userId, UserDto userDto) {
         User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ValidationException("User with id " + userId + " not found"));
@@ -59,6 +63,7 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @Transactional
     public void deleteUserById(Long userId) {
         if (!userRepository.findById(userId).isPresent()) {
             throw new ValidationException("User with id " + userId + " not found");

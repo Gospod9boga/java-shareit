@@ -1,6 +1,7 @@
 package ru.practicum.shareit.request;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.Exception.ValidationException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repo.UserRepository;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ItemRequestImplService implements ItemRequestService {
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
@@ -22,6 +24,7 @@ public class ItemRequestImplService implements ItemRequestService {
     }
 
     @Override
+    @Transactional
     public ItemRequest createRequest(ItemRequest request, Long userId) {
 
         User requester = userRepository.findById(userId)

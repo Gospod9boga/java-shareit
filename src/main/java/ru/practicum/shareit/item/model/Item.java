@@ -1,9 +1,13 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.User;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "items")
 public class Item {
@@ -32,51 +36,4 @@ public class Item {
     public Item() {
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Boolean getIsAvailable() {
-        return isAvailable;
-    }
-
-    public void setIsAvailable(Boolean available) {
-        isAvailable = available;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
-
-    public ItemRequest getRequest() {
-        return request;
-    }
-
-    public void setRequest(ItemRequest request) {
-        this.request = request;
-    }
 }
