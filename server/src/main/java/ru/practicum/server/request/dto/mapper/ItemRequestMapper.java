@@ -11,12 +11,12 @@ import java.util.stream.Collectors;
 
 public class ItemRequestMapper {
 
-    public static ItemForRequestDto toItemForRequestDto(Item item){
-       ItemForRequestDto dto = new ItemForRequestDto();
-       dto.setId(item.getId());
-       dto.setName(item.getName());
-       dto.setOwnerId(item.getOwner().getId());
-       return dto;
+    public static ItemForRequestDto toItemForRequestDto(Item item) {
+        ItemForRequestDto dto = new ItemForRequestDto();
+        dto.setId(item.getId());
+        dto.setName(item.getName());
+        dto.setOwnerId(item.getOwner().getId());
+        return dto;
 
     }
 

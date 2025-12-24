@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.server.Exception.EmailAlreadyExistsException;
 import ru.practicum.server.Exception.EntityNotFoundException;
-import ru.practicum.server.Exception.ValidationException;
 import ru.practicum.server.user.dto.UserDto;
 import ru.practicum.server.user.dto.mapper.UserMapper;
 import ru.practicum.server.user.repo.UserRepository;

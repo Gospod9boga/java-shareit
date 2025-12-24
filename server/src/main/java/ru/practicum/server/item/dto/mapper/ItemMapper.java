@@ -38,9 +38,7 @@ public class ItemMapper {
         item.setIsAvailable(itemDto.getAvailable());
 
         if (itemDto.getRequestId() != null) {
-            ItemRequest request = requestRepository.findById(itemDto.getRequestId())
-                    .orElseThrow(() -> new ValidationException(
-                            "Запрос с ID " + itemDto.getRequestId() + " не найден"));
+            ItemRequest request = requestRepository.findById(itemDto.getRequestId()).orElseThrow(() -> new ValidationException("Запрос с ID " + itemDto.getRequestId() + " не найден"));
             item.setRequest(request);
         }
 

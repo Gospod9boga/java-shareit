@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
 import ru.practicum.server.Exception.EmailAlreadyExistsException;
-import ru.practicum.server.Exception.ValidationException;
 import ru.practicum.server.user.User;
 import ru.practicum.server.user.UserServiceImp;
 import ru.practicum.server.user.dto.UserDto;
