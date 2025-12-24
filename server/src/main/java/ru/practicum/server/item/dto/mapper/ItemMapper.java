@@ -7,6 +7,8 @@ import ru.practicum.server.item.model.Item;
 import ru.practicum.server.request.ItemRequest;
 import ru.practicum.server.request.ItemRequestRepository;
 
+import java.util.ArrayList;
+
 @Component
 public class ItemMapper {
     public static ItemDto toDto(Item item) {
@@ -18,6 +20,7 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.getIsAvailable());
+        itemDto.setComments(new ArrayList<>());
         if (item.getRequest() != null) {
             itemDto.setRequestId(item.getRequest().getId());
         }
