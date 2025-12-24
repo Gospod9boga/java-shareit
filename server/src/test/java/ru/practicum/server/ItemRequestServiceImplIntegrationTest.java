@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
-import ru.practicum.server.item.model.Item;
 import ru.practicum.server.item.ItemRepository;
 import ru.practicum.server.request.ItemRequest;
 import ru.practicum.server.request.ItemRequestImplService;
