@@ -58,8 +58,9 @@ public class RequestValidationFilter extends OncePerRequestFilter {
     }
 
     private boolean isProtectedPath(String path) {
-        return !path.equals("/users") &&
-                !(path.startsWith("/users") && !path.matches("/users/\\d+"));
+        return !(path.equals("/users") ||
+                (path.startsWith("/users") && path.matches("/users/\\d+")) ||
+                path.startsWith("/actuator"));
     }
 
     private boolean validateProtectedRequest(HttpServletRequest request,
